@@ -1,0 +1,114 @@
+---
+title: "Divorce Analysis"
+Author: "Shravanthi Logishetti"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+
+setwd("C:/Users/Shai(daa)/Desktop/Data Mining/Project 1")
+library("OneR")
+library("FFTrees")
+ pacman::p_load(SuperLearner,tidyverse, ISLR, magrittr)
+ library(randomForest)
+ library(glmnet)
+library(dplyr)
+
+```
+
+```{r}
+library(readr)
+divorce <- read_csv("divorce.csv")
+View(divorce)
+divorce = read.csv("divorce.csv", header = TRUE, sep = ";")
+head(divorce, 3)
+
+```
+
+```{r}
+#First Algorithm: Fast and Frugal Trees
+divorce$Class = as.logical(divorce$Class)
+form = formula(Class ~.)
+divorce.fft <- FFTrees(form,
+                     data = divorce)
+names(divorce.fft)
+#Visualization
+myFFTplot = plot(divorce.fft, main = "Predicting Divorce",
+         decision.labels = c("Divorced", "Married"))
+
+# This is a divorce dataset of 140 observations, where each case is characterized by their values on 54 attributes. This binary criterion of Class variable is the marriage status which can either be True(Divorced) or False (Married )
+
+# Using FFTress I'm going to find the Most important attributes and their values that leads to Divorce. 
+
+# 51% is Divorced and 49% is Married in this dataset.The goal of this algorithm is to maximize correct decisions (hits and correct rejections), while minimizing errors (misses and false-alarms).
+
+# A fast-and-frugal tree (FFT) for classifying either as married or divorced  based on upto three cues. Each cue is contained in a node, represented as rectangles. Decisions are made in leafs, represented as circles. 
+
+# Based on this decision Tree I can say that, Atr 18 that is " My spouse and I have similar ideas about how marriage should be" If that value is greater than 1 then Married otherwise Divorsed. In the same way Atr17 which is"We share the same views about being happy in our life with my spouse" If it is greater than 1 then married otherwise Divorsed. and Atr 19 which is " My spouse and I have similar ideas about how roles should be in marriage".
+
+
+```
+
+```{r}
+#  My second Algorithm: ONE-R
+divorce.oneR = optbin(divorce)
+
+divorce_OneR = OneR(divorce.oneR, verbose = TRUE)
+
+# According to ONE-R The Most Importance variable is Atr18 which is " My spouse and I have similar ideas about how marriage should be"
+```
+
+```{r}
+plot(divorce_OneR)
+```
+
+```{r}
+#Evaluation 
+eval_model(predict(divorce_OneR, divorce), divorce$Class)
+# The accuracy of this model is 98%
+```
+
+```{r}
+#My final Algorithm is Lasso Regression 
+x = as.matrix(divorce[,-55])
+y = divorce$Class
+lasso_model = cv.glmnet(x, y, alpha = 1) 
+best_lambda_lasso = lasso_model$lambda.min
+#Visualization
+plot(lasso_model)
+
+# This plots is the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the λ sequence (error bars). Two special values along the λ sequence are indicated by the vertical dotted lines. lambda.min is the value of λ that gives minimum mean cross-validated error.
+
+
+```
+
+```{r}
+#Pridiction
+lasso_predictions = predict(lasso_model, s = best_lambda_lasso, newx = x)
+
+```
+
+```         
+```
